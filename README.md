@@ -22,6 +22,8 @@ Thank You
 Lance A. Marchetti
 
 
+File 1 hint:   pos212.  
+File 2 hint:   pos98P  
 
 
 
@@ -166,5 +168,3 @@ Lance A. Marchetti
 
 
 
-File 1 hint: pos212.
-File 2 hint: pos98P
