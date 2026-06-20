@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>CoverKey Prototype - Raw Byte Mapping</title>
+
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --panel2: #273244;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #374151;
+      --accent: #38bdf8;
+      --accent2: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --drop: #172033;
+      --dropHover: #21304a;
+      --code: #0b1020;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    header {
+      padding: 22px;
+      border-bottom: 1px solid var(--border);
+      background: #0f172a;
+    }
+
+    header h1 {
+      margin: 0 0 6px 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 980px;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 28px));
+      margin: 18px auto 40px auto;
+    }
+
+    .notice {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      padding: 12px 14px;
+      border-radius: 8px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .tab-button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .tab-button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #00111a;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 850px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .card h2,
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .card h2 {
+      font-size: 19px;
+      margin-bottom: 10px;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .dropzone {
+      min-height: 190px;
+      border: 2px dashed #475569;
+      border-radius: 12px;
+      background: var(--drop);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      color: var(--muted);
+      overflow: hidden;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      background: var(--dropHover);
+      border-color: var(--accent);
+    }
+
+    .dropzone.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: #334155;
+    }
+
+    .dropzone strong {
+      color: var(--text);
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-info {
+      margin-top: 10px;
+      width: 100%;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: left;
+      word-break: break-word;
+    }
+
+    .file-info div {
+      margin: 3px 0;
+    }
+
+    .preview-img {
+      max-width: 200px;
+      width: auto;
+      height: auto;
+      max-height: 140px;
+      display: block;
+      margin: 8px auto;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #000;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 14px;
+    }
+
+    textarea:focus {
+      outline: 2px solid rgba(56, 189, 248, 0.35);
+      border-color: var(--accent);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button.action {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-weight: 700;
+      background: var(--accent2);
+      color: #03130a;
+    }
+
+    button.action.secondary {
+      background: var(--accent);
+      color: #00111a;
+    }
+
+    button.action.danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    button.action:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .status {
+      white-space: pre-wrap;
+      background: var(--code);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 14px;
+      padding: 12px;
+      min-height: 70px;
+      color: var(--muted);
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .status.ok {
+      border-color: rgba(34, 197, 94, 0.6);
+      color: #bbf7d0;
+    }
+
+    .status.err {
+      border-color: rgba(239, 68, 68, 0.7);
+      color: #fecaca;
+    }
+
+    .status.warn {
+      border-color: rgba(245, 158, 11, 0.7);
+      color: #fde68a;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .mini-list {
+      margin: 8px 0 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--muted);
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+      margin: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>CoverKey Prototype</h1>
+    <p>
+      Raw-byte host-referenced coordinate encoding. The host file is not modified.
+      The generated <strong>.ckey</strong> file stores packed coordinates pointing
+      into the host bytes.
+    </p>
+  </header>
+
+  <main>
+    <div class="notice">
+      <strong>Prototype note:</strong>
+      Test with small files first. Large files may temporarily freeze the browser.
+      This version uses no external libraries and stores the key as a compact
+      binary <code>.ckey</code> file, not JSON and not Base64.
+    </div>
+
+    <div class="tabs">
+      <button class="tab-button active" data-tab="encodePanel">ENCODE</button>
+      <button class="tab-button" data-tab="decodePanel">DECODE</button>
+    </div>
+
+    <!-- ENCODE PANEL -->
+    <section id="encodePanel" class="tab-panel active">
+      <div class="grid">
+
+        <div class="card">
+          <h2>1. Host File</h2>
+          <p class="small">
+            Choose any host file. Image hosts will show a small preview.
+          </p>
+
+          <div id="encodeHostDrop" class="dropzone">
+            <strong>Click or drop Host file here</strong>
+            <span>All file types accepted</span>
+            <input id="encodeHostInput" class="file-input" type="file" />
+            <div id="encodeHostInfo" class="file-info"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>2. Source File</h2>
+          <p class="small">
+            Choose a source file, unless you type text in the text area below.
+          </p>
+
+          <div id="sourceDrop" class="dropzone">
+            <strong>Click or drop Source file here</strong>
+            <span>All file types accepted</span>
+            <input id="sourceInput" class="file-input" type="file" />
+            <div id="sourceInfo" class="file-info"></div>
+          </div>
+        </div>
+
+        <div class="card full-width">
+          <h2>Or Type Text Payload</h2>
+          <p class="small">
+            If you type here, the Source file dropzone is disabled. Clear this
+            text area to enable Source file selection again.
+          </p>
+
+          <textarea
+            id="textPayload"
+            placeholder="Optional text payload to encode instead of a Source file..."
+          ></textarea>
+        </div>
+
+        <div class="card full-width">
+          <h2>Encode</h2>
+          <p class="small">
+            The app maps each source byte to a matching byte position in the host,
+            then packs those coordinates into a binary <code>.ckey</code> file.
+          </p>
+
+          <div class="button-row">
+            <button id="encodeButton" class="action">Generate .ckey</button>
+            <button id="clearEncodeButton" class="action danger">Clear Encode Inputs</button>
+          </div>
+
+          <div id="encodeStatus" class="status">
+Ready.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- DECODE PANEL -->
+    <section id="decodePanel" class="tab-panel">
+      <div class="grid">
+
+        <div class="card">
+          <h2>1. Decode Host File</h2>
+          <p class="small">
+            Must be the exact same host file used during encoding.
+          </p>
+
+          <div id="decodeHostDrop" class="dropzone">
+            <strong>Click or drop Host file here</strong>
+            <span>All file types accepted</span>
+            <input id="decodeHostInput" class="file-input" type="file" />
+            <div id="decodeHostInfo" class="file-info"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>2. .ckey File</h2>
+          <p class="small">
+            Drop or select the <code>.ckey</code> file. Decode starts automatically
+            once both Host and .ckey are loaded.
+          </p>
+
+          <div id="keyDrop" class="dropzone">
+            <strong>Click or drop .ckey file here</strong>
+            <span>Decode auto-starts when ready</span>
+            <input id="keyInput" class="file-input" type="file" accept=".ckey,application/octet-stream" />
+            <div id="keyInfo" class="file-info"></div>
+          </div>
+        </div>
+
+        <div class="card full-width">
+          <h2>Decode Status</h2>
+          <p class="small">
+            On successful recovery, the source bytes are downloaded automatically.
+            The app uses stored filename/MIME where available, with magic-header
+            detection as a fallback.
+          </p>
+
+          <div class="button-row">
+            <button id="clearDecodeButton" class="action danger">Clear Decode Inputs</button>
+          </div>
+
+          <div id="decodeStatus" class="status">
+Waiting for Host and .ckey.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="notice" style="margin-top: 18px;">
+      <strong>Current binary .ckey format:</strong>
+      <span class="pill">Magic: CKEY</span>
+      <span class="pill">Version: 1</span>
+      <span class="pill">Mode: raw-byte coordinates</span>
+      <span class="pill">SHA-256 host check</span>
+      <span class="pill">SHA-256 source check</span>
+      <span class="pill">N-bit packed coordinates</span>
+    </div>
+  </main>
+
+  <script>
+    const CKEY_MAGIC = "CKEY";
+    const CKEY_VERSION = 1;
+    const CKEY_MODE_RAW_BYTE = 1;
+
+    let encodeHostFile = null;
+    let sourceFile = null;
+    let decodeHostFile = null;
+    let keyFile = null;
+
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+
+    const els = {
+      tabButtons: document.querySelectorAll(".tab-button"),
+      tabPanels: document.querySelectorAll(".tab-panel"),
+
+      encodeHostDrop: document.getElementById("encodeHostDrop"),
+      encodeHostInput: document.getElementById("encodeHostInput"),
+      encodeHostInfo: document.getElementById("encodeHostInfo"),
+
+      sourceDrop: document.getElementById("sourceDrop"),
+      sourceInput: document.getElementById("sourceInput"),
+      sourceInfo: document.getElementById("sourceInfo"),
+
+      textPayload: document.getElementById("textPayload"),
+      encodeButton: document.getElementById("encodeButton"),
+      clearEncodeButton: document.getElementById("clearEncodeButton"),
+      encodeStatus: document.getElementById("encodeStatus"),
+
+      decodeHostDrop: document.getElementById("decodeHostDrop"),
+      decodeHostInput: document.getElementById("decodeHostInput"),
+      decodeHostInfo: document.getElementById("decodeHostInfo"),
+
+      keyDrop: document.getElementById("keyDrop"),
+      keyInput: document.getElementById("keyInput"),
+      keyInfo: document.getElementById("keyInfo"),
+
+      clearDecodeButton: document.getElementById("clearDecodeButton"),
+      decodeStatus: document.getElementById("decodeStatus")
+    };
+
+    init();
+
+    function init() {
+      setupTabs();
+
+      setupDropzone({
+        dropzone: els.encodeHostDrop,
+        input: els.encodeHostInput,
+        info: els.encodeHostInfo,
+        onFile: file => {
+          encodeHostFile = file;
+          showFileInfo(file, els.encodeHostInfo);
+        }
+      });
+
+      setupDropzone({
+        dropzone: els.sourceDrop,
+        input: els.sourceInput,
+        info: els.sourceInfo,
+        onFile: file => {
+          sourceFile = file;
+          showFileInfo(file, els.sourceInfo);
+          if (file) {
+            els.textPayload.value = "";
+            updateSourceTextMode();
+          }
+        }
+      });
+
+      setupDropzone({
+        dropzone: els.decodeHostDrop,
+        input: els.decodeHostInput,
+        info: els.decodeHostInfo,
+        onFile: file => {
+          decodeHostFile = file;
+          showFileInfo(file, els.decodeHostInfo);
+          tryAutoDecode();
+        }
+      });
+
+      setupDropzone({
+        dropzone: els.keyDrop,
+        input: els.keyInput,
+        info: els.keyInfo,
+        onFile: file => {
+          keyFile = file;
+          showFileInfo(file, els.keyInfo);
+          tryAutoDecode();
+        }
+      });
+
+      els.textPayload.addEventListener("input", updateSourceTextMode);
+      els.encodeButton.addEventListener("click", encodeNow);
+      els.clearEncodeButton.addEventListener("click", clearEncode);
+      els.clearDecodeButton.addEventListener("click", clearDecode);
+    }
+
+    function setupTabs() {
+      els.tabButtons.forEach(button => {
+        button.addEventListener("click", () => {
+          const target = button.dataset.tab;
+
+          els.tabButtons.forEach(b => b.classList.remove("active"));
+          els.tabPanels.forEach(p => p.classList.remove("active"));
+          button.classList.add("active");
+          document.getElementById(target).classList.add("active");
+        });
+      });
+    }
+
+    function setupDropzone({ dropzone, input, info, onFile }) {
+      dropzone.addEventListener("click", () => {
+        if (dropzone.classList.contains("disabled")) return;
+        input.click();
+      });
+
+      input.addEventListener("change", () => {
+        if (input.files && input.files[0]) {
+          onFile(input.files[0]);
+        }
+      });
+
+      dropzone.addEventListener("dragover", event => {
+        event.preventDefault();
+        if (dropzone.classList.contains("disabled")) return;
+        dropzone.classList.add("dragover");
+      });
+
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("dragover");
+      });
+
+      dropzone.addEventListener("drop", event => {
+        event.preventDefault();
+        dropzone.classList.remove("dragover");
+
+        if (dropzone.classList.contains("disabled")) return;
+
+        const file = event.dataTransfer.files && event.dataTransfer.files[0];
+
+        if (file) {
+          onFile(file);
+        }
+      });
+    }
+
+    function updateSourceTextMode() {
+      const hasText = els.textPayload.value.length > 0;
+
+      if (hasText) {
+        sourceFile = null;
+        els.sourceInput.value = "";
+        els.sourceInfo.innerHTML = "";
+        els.sourceDrop.classList.add("disabled");
+      } else {
+        els.sourceDrop.classList.remove("disabled");
+      }
+    }
+
+    async function showFileInfo(file, container) {
+      container.innerHTML = "";
+
+      if (!file) return;
+
+      const lines = [];
+
+      lines.push(`<div><strong>Filename:</strong> ${escapeHtml(file.name)}</div>`);
+      lines.push(`<div><strong>MIME:</strong> ${escapeHtml(file.type || "unknown")}</div>`);
+      lines.push(`<div><strong>Size:</strong> ${file.size} bytes</div>`);
+
+      if (file.type && file.type.startsWith("image/")) {
+        try {
+          const imgData = await readFileAsDataURL(file);
+          const dims = await getImageDimensions(imgData);
+
+          lines.push(`<div><strong>Dimensions:</strong> ${dims.width} × ${dims.height}</div>`);
+          lines.push(`<img class="preview-img" src="${imgData}" alt="preview" />`);
+        } catch (err) {
+          lines.push(`<div><strong>Preview:</strong> unavailable</div>`);
+        }
+      }
+
+      container.innerHTML = lines.join("");
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function getImageDimensions(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => {
+          resolve({
+            width: img.naturalWidth,
+            height: img.naturalHeight
+          });
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function clearEncode() {
+      encodeHostFile = null;
+      sourceFile = null;
+
+      els.encodeHostInput.value = "";
+      els.sourceInput.value = "";
+      els.textPayload.value = "";
+
+      els.encodeHostInfo.innerHTML = "";
+      els.sourceInfo.innerHTML = "";
+
+      els.sourceDrop.classList.remove("disabled");
+
+      setStatus("encodeStatus", "Ready.");
+    }
+
+    function clearDecode() {
+      decodeHostFile = null;
+      keyFile = null;
+
+      els.decodeHostInput.value = "";
+      els.keyInput.value = "";
+
+      els.decodeHostInfo.innerHTML = "";
+      els.keyInfo.innerHTML = "";
+
+      setStatus("decodeStatus", "Waiting for Host and .ckey.");
+    }
+
+    function tryAutoDecode() {
+      if (decodeHostFile && keyFile) {
+        decodeNow();
+      }
+    }
+
+    async function encodeNow() {
+      if (!encodeHostFile) {
+        setStatus("encodeStatus", "Please choose a Host file.", "err");
+        return;
+      }
+
+      const textPayload = els.textPayload.value;
+      const hasTextPayload = textPayload.length > 0;
+
+      if (!hasTextPayload && !sourceFile) {
+        setStatus("encodeStatus", "Please choose a Source file or type text payload.", "err");
+        return;
+      }
+
+      try {
+        setStatus("encodeStatus", "Reading Host and Source bytes...");
+
+        const hostBytes = new Uint8Array(await encodeHostFile.arrayBuffer());
+
+        let sourceBytes;
+        let sourceName;
+        let sourceMime;
+        let sourceKindFlag = 0;
+
+        if (hasTextPayload) {
+          sourceBytes = encoder.encode(textPayload);
+          sourceName = "text_payload.txt";
+          sourceMime = "text/plain;charset=utf-8";
+          sourceKindFlag = 1;
+        } else {
+          sourceBytes = new Uint8Array(await sourceFile.arrayBuffer());
+          sourceName = sourceFile.name || "source.bin";
+          sourceMime = sourceFile.type || "application/octet-stream";
+          sourceKindFlag = 0;
+        }
+
+        if (sourceBytes.length === 0) {
+          throw new Error("Source payload is empty.");
+        }
+
+        if (hostBytes.length === 0) {
+          throw new Error("Host file is empty.");
+        }
+
+        setStatus("encodeStatus", "Building host byte index and coordinate map...");
+
+        const mapping = buildCoordinateMap(hostBytes, sourceBytes);
+
+        const coordinates = mapping.coordinates;
+        const highestCoordinate = mapping.highestCoordinate;
+        const bitsPerCoordinate = bitsNeeded(highestCoordinate);
+
+        if (bitsPerCoordinate > 32) {
+          throw new Error("Host too large for this browser prototype.");
+        }
+
+        setStatus("encodeStatus", "Packing coordinates into binary stream...");
+
+        const packedCoords = packCoordinates(coordinates, bitsPerCoordinate);
+
+        setStatus("encodeStatus", "Hashing Host and Source with SHA-256...");
+
+        const hostHash = await sha256Bytes(hostBytes);
+        const sourceHash = await sha256Bytes(sourceBytes);
+        
+        // NOTE: If you are trying to load an image here, 'img', 'src', and 'reject'
+        // are not defined in this scope. You'll likely need to remove these two lines:
+        img.onerror = reject; 
+        img.src = src;
+        
+     } catch (error) {
+        console.error("Encoding failed:", error);
+        setStatus("encodeStatus", "Error: " + error.message);
+     } finally {
+        // Optional finally block
+     }
+} // End of the function
+
+    function clearEncode() {
+      encodeHostFile = null;
+      sourceFile = null;
+
+      els.encodeHostInput.value = "";
+      els.sourceInput.value = "";
+      els.textPayload.value = "";
+
+      els.encodeHostInfo.innerHTML = "";
+      els.sourceInfo.innerHTML = "";
+      els.sourceDrop.classList.remove("disabled");
+
+      setStatus("encodeStatus", "Ready.");
+    }
+
+    function clearDecode() {
+      decodeHostFile = null;
+      keyFile = null;
+
+      els.decodeHostInput.value = "";
+      els.keyInput.value = "";
+
+      els.decodeHostInfo.innerHTML = "";
+      els.keyInfo.innerHTML = "";
+
+      setStatus("decodeStatus", "Waiting for Host and .ckey.");
+    }
+
+    function tryAutoDecode() {
+      if (decodeHostFile && keyFile) {
+        decodeNow();
+      }
+    }
+
+    async function encodeNow() {
+      if (!encodeHostFile) {
+        setStatus("encodeStatus", "Please choose a Host file.", "err");
+        return;
+      }
+
+      const text = els.textPayload.value;
+      const usingText = text.length > 0;
+
+      if (!usingText && !sourceFile) {
+        setStatus(
+          "encodeStatus",
+          "Please choose a Source file or type a text payload.",
+          "err"
+        );
+        return;
+      }
+
+      try {
+        setStatus("encodeStatus", "Reading Host and Source bytes...");
+
+        const hostBytes = new Uint8Array(await encodeHostFile.arrayBuffer());
+
+        let sourceBytes;
+        let originalFileName;
+        let originalMime;
+
+        if (usingText) {
+          sourceBytes = encoder.encode(text);
+          originalFileName = "text_payload.txt";
+          originalMime = "text/plain;charset=utf-8";
+        } else {
+          sourceBytes = new Uint8Array(await sourceFile.arrayBuffer());
+          originalFileName = sourceFile.name || "source.bin";
+          originalMime = sourceFile.type || "";
+        }
+
+        if (hostBytes.length === 0) {
+          throw new Error("Host file is empty.");
+        }
+
+        if (sourceBytes.length === 0) {
+          throw new Error("Source/text payload is empty.");
+        }
+
+        setStatus("encodeStatus", "Building coordinate map...");
+
+        const mapResult = buildCoordinateMap(hostBytes, sourceBytes);
+        const coordinates = mapResult.coordinates;
+        const highestCoordinate = mapResult.highestCoordinate;
+
+        const bitsPerCoordinate = bitsNeeded(highestCoordinate);
+
+        if (bitsPerCoordinate > 32) {
+          throw new Error("Host too large for this prototype.");
+        }
+
+        setStatus(
+          "encodeStatus",
+          [
+            "Coordinate map built.",
+            `Source bytes: ${sourceBytes.length}`,
+            `Highest coordinate: ${highestCoordinate}`,
+            `Bits per coordinate: ${bitsPerCoordinate}`,
+            "",
+            "Packing coordinates..."
+          ].join("\n")
+        );
+
+        const packedCoords = packCoordinates(coordinates, bitsPerCoordinate);
+
+        setStatus("encodeStatus", "Hashing Host and Source with SHA-256...");
+
+        const hostHash = await sha256Bytes(hostBytes);
+        const sourceHash = await sha256Bytes(sourceBytes);
+
+        const fileNameBytes = encoder.encode(originalFileName);
+        const mimeBytes = encoder.encode(originalMime);
+
+        if (fileNameBytes.length > 65535) {
+          throw new Error("Filename too long for .ckey header.");
+        }
+
+        if (mimeBytes.length > 65535) {
+          throw new Error("MIME string too long for .ckey header.");
+        }
+
+        const fixedHeader = new Uint8Array(92);
+        const view = new DataView(fixedHeader.buffer);
+
+        // Header layout:
+        // 0-3   magic "CKEY"
+        // 4     version
+        // 5     mode
+        // 6     bits per coordinate
+        // 7     flags
+        // 8-15  source size uint64 big-endian
+        // 16-23 coordinate count uint64 big-endian
+        // 24-55 host SHA-256
+        // 56-87 source SHA-256
+        // 88-89 filename length uint16 big-endian
+        // 90-91 MIME length uint16 big-endian
+
+        fixedHeader[0] = 0x43; // C
+        fixedHeader[1] = 0x4b; // K
+        fixedHeader[2] = 0x45; // E
+        fixedHeader[3] = 0x59; // Y
+
+        view.setUint8(4, CKEY_VERSION);
+        view.setUint8(5, CKEY_MODE_RAW_BYTE);
+        view.setUint8(6, bitsPerCoordinate);
+
+        // flags:
+        // bit 0 = original payload was typed text
+        const flags = usingText ? 1 : 0;
+        view.setUint8(7, flags);
+
+        view.setBigUint64(8, BigInt(sourceBytes.length), false);
+        view.setBigUint64(16, BigInt(coordinates.length), false);
+
+        fixedHeader.set(hostHash, 24);
+        fixedHeader.set(sourceHash, 56);
+
+        view.setUint16(88, fileNameBytes.length, false);
+        view.setUint16(90, mimeBytes.length, false);
+
+        const keyBytes = concatUint8Arrays([
+          fixedHeader,
+          fileNameBytes,
+          mimeBytes,
+          packedCoords
+        ]);
+
+        const keyBaseName = stripExtension(originalFileName) || "payload";
+
+        downloadBytes(
+          keyBytes,
+          `${keyBaseName}.ckey`,
+          "application/octet-stream"
+        );
+
+        setStatus(
+          "encodeStatus",
+          [
+            "CKEY generated successfully.",
+            "",
+            `Host SHA-256:   ${bytesToHex(hostHash)}`,
+            `Source SHA-256: ${bytesToHex(sourceHash)}`,
+            "",
+            `Source size: ${sourceBytes.length} bytes`,
+            `Coordinate count: ${coordinates.length}`,
+            `Highest coordinate used: ${highestCoordinate}`,
+            `Bits per coordinate: ${bitsPerCoordinate}`,
+            `Packed coordinate bytes: ${packedCoords.length}`,
+            `Final .ckey size: ${keyBytes.length} bytes`
+          ].join("\n"),
+          "ok"
+        );
+      } catch (err) {
+        console.error(err);
+        setStatus("encodeStatus", `Encode failed:\n${err.message}`, "err");
+      }
+    }
+
+    
+    async function decodeNow() {
+      if (!decodeHostFile) {
+        setStatus("decodeStatus", "Please choose a decode Host file first.", "err");
+        return;
+      }
+
+      if (!keyFile) {
+        setStatus("decodeStatus", "Please choose a .ckey file.", "err");
+        return;
+      }
+
+      try {
+        setStatus("decodeStatus", "Reading Host and .ckey bytes...");
+
+        const hostBytes = new Uint8Array(await decodeHostFile.arrayBuffer());
+        const keyBytes = new Uint8Array(await keyFile.arrayBuffer());
+
+        const parsed = parseCKey(keyBytes);
+
+        setStatus("decodeStatus", "Verifying Host SHA-256...");
+
+        const currentHostHash = await sha256Bytes(hostBytes);
+
+        if (!equalBytes(currentHostHash, parsed.hostHash)) {
+          throw new Error(
+            [
+              "Host SHA-256 mismatch.",
+              "This .ckey was not made for this exact Host file.",
+              "",
+              `Expected: ${bytesToHex(parsed.hostHash)}`,
+              `Actual:   ${bytesToHex(currentHostHash)}`
+            ].join("\n")
+          );
+        }
+
+        setStatus("decodeStatus", "Unpacking coordinate stream...");
+
+        const coordinates = unpackCoordinates(
+          parsed.packedCoords,
+          parsed.bitsPerCoordinate,
+          Number(parsed.coordinateCount)
+        );
+
+        setStatus("decodeStatus", "Recovering source bytes from Host...");
+
+        const recovered = new Uint8Array(Number(parsed.sourceSize));
+
+        for (let i = 0; i < coordinates.length; i++) {
+          const pos = coordinates[i];
+
+          if (pos < 0 || pos >= hostBytes.length) {
+            throw new Error(`Coordinate ${i} points outside host: ${pos}`);
+          }
+
+          recovered[i] = hostBytes[pos];
+        }
+
+        setStatus("decodeStatus", "Verifying recovered Source SHA-256...");
+
+        const recoveredHash = await sha256Bytes(recovered);
+
+        if (!equalBytes(recoveredHash, parsed.sourceHash)) {
+          throw new Error(
+            [
+              "Recovered source SHA-256 mismatch.",
+              "The Host, .ckey, or packed coordinates may be damaged.",
+              "",
+              `Expected: ${bytesToHex(parsed.sourceHash)}`,
+              `Actual:   ${bytesToHex(recoveredHash)}`
+            ].join("\n")
+          );
+        }
+
+        const detected = detectFileType(recovered);
+
+        let outputName = parsed.fileName || "recovered";
+
+        if (!hasExtension(outputName)) {
+          outputName += detected.extension || ".bin";
+        }
+
+        const mime = parsed.mime || detected.mime || "application/octet-stream";
+
+        downloadBytes(recovered, outputName, mime);
+
+        setStatus(
+          "decodeStatus",
+          [
+            "Decode successful.",
+            "",
+            `Recovered file: ${outputName}`,
+            `Detected type: ${detected.label}`,
+            `MIME: ${mime}`,
+            `Recovered size: ${recovered.length} bytes`,
+            `SHA-256: ${bytesToHex(recoveredHash)}`
+          ].join("\n"),
+          "ok"
+        );
+      } catch (err) {
+        console.error(err);
+        setStatus("decodeStatus", `Decode failed:\n${err.message}`, "err");
+      }
+    }
+
+    function parseCKey(keyBytes) {
+      if (keyBytes.length < 92) {
+        throw new Error("Invalid .ckey file. File is too small.");
+      }
+
+      const magic =
+        String.fromCharCode(keyBytes[0]) +
+        String.fromCharCode(keyBytes[1]) +
+        String.fromCharCode(keyBytes[2]) +
+        String.fromCharCode(keyBytes[3]);
+
+      if (magic !== CKEY_MAGIC) {
+        throw new Error("Invalid .ckey file. Missing CKEY magic header.");
+      }
+
+      const view = new DataView(
+        keyBytes.buffer,
+        keyBytes.byteOffset,
+        keyBytes.byteLength
+      );
+
+      const version = view.getUint8(4);
+      const mode = view.getUint8(5);
+      const bitsPerCoordinate = view.getUint8(6);
+      const flags = view.getUint8(7);
+
+      if (version !== CKEY_VERSION) {
+        throw new Error(`Unsupported .ckey version: ${version}`);
+      }
+
+      if (mode !== CKEY_MODE_RAW_BYTE) {
+        throw new Error(`Unsupported .ckey mode: ${mode}`);
+      }
+
+      if (bitsPerCoordinate < 1 || bitsPerCoordinate > 32) {
+        throw new Error(`Invalid bits per coordinate: ${bitsPerCoordinate}`);
+      }
+
+      const sourceSize = view.getBigUint64(8, false);
+      const coordinateCount = view.getBigUint64(16, false);
+
+      if (sourceSize > BigInt(Number.MAX_SAFE_INTEGER)) {
+        throw new Error("Source too large for this browser prototype.");
+      }
+
+      if (coordinateCount > BigInt(Number.MAX_SAFE_INTEGER)) {
+        throw new Error("Coordinate count too large for this browser prototype.");
+      }
+
+      if (sourceSize !== coordinateCount) {
+        throw new Error(
+          "Invalid .ckey. In raw-byte mode, source size must equal coordinate count."
+        );
+      }
+
+      const hostHash = keyBytes.slice(24, 56);
+      const sourceHash = keyBytes.slice(56, 88);
+
+      const fileNameLength = view.getUint16(88, false);
+      const mimeLength = view.getUint16(90, false);
+
+      const fileNameStart = 92;
+      const fileNameEnd = fileNameStart + fileNameLength;
+
+      const mimeStart = fileNameEnd;
+      const mimeEnd = mimeStart + mimeLength;
+
+      if (mimeEnd > keyBytes.length) {
+        throw new Error("Invalid .ckey metadata lengths.");
+      }
+
+      const fileNameBytes = keyBytes.slice(fileNameStart, fileNameEnd);
+      const mimeBytes = keyBytes.slice(mimeStart, mimeEnd);
+
+      const packedCoords = keyBytes.slice(mimeEnd);
+
+      const expectedPackedBytes = Math.ceil(
+        Number(coordinateCount) * bitsPerCoordinate / 8
+      );
+
+      if (packedCoords.length < expectedPackedBytes) {
+        throw new Error("Packed coordinate stream is shorter than expected.");
+      }
+
+      const fileName = decoder.decode(fileNameBytes);
+      const mime = decoder.decode(mimeBytes);
+
+      // 1. Properly return the object for parseCKey
+      return {
+        version,
+        mode,
+        bitsPerCoordinate,
+        flags,
+        sourceSize: Number(sourceSize),
+        coordinateCount: Number(coordinateCount),
+        hostHash,
+        sourceHash,
+        fileName,
+        mime,
+        packedCoords
+      };
+    } // <--- parseCKey function ends here
+
+    // 2. The code below was accidentally inside the return statement!
+    // It looks like it belongs to your buildCoordinateMap function.
+    function buildCoordinateMap(hostBytes, sourceBytes) {
+      const positionsByByte = new Array(256);
+      for (let i = 0; i < 256; i++) {
+        positionsByByte[i] = [];
+      }
+
+      for (let pos = 0; pos < hostBytes.length; pos++) {
+        const value = hostBytes[pos];
+        positionsByByte[value].push(pos);
+      }
+
+      const coordinates = new Uint32Array(sourceBytes.length);
+      let highestCoordinate = 0;
+
+      for (let i = 0; i < sourceBytes.length; i++) {
+        const byte = sourceBytes[i];
+        const positions = positionsByByte[byte];
+
+        if (!positions || positions.length === 0) {
+          const hex = byte.toString(16).padStart(2, "0");
+          throw new Error(
+            `Host does not contain required byte ${byte} / 0x${hex}. ` +
+            "Try a larger or different Host file."
+          );
+        }
+
+        // Prototype strategy:
+        // Use first occurrence of the needed byte.
+        // Later improvement: rotate through positions or password-seeded choice.
+        const pos = positions[0];
+
+        coordinates[i] = pos;
+
+        if (pos > highestCoordinate) {
+          highestCoordinate = pos;
+        }
+      }
+
+      return {
+        coordinates,
+        highestCoordinate
+      };
+    }
+
+    function bitsNeeded(maxValue) {
+      if (maxValue <= 0) return 1;
+      return Math.ceil(Math.log2(maxValue + 1));
+    }
+
+    function packCoordinates(coordinates, bitsPerCoordinate) {
+      const totalBits = coordinates.length * bitsPerCoordinate;
+      const totalBytes = Math.ceil(totalBits / 8);
+      const out = new Uint8Array(totalBytes);
+
+      let bitPos = 0;
+
+      for (let i = 0; i < coordinates.length; i++) {
+        const value = coordinates[i];
+
+        for (let b = bitsPerCoordinate - 1; b >= 0; b--) {
+          const bit = (value >>> b) & 1;
+          const byteIndex = bitPos >> 3;
+          const innerBit = 7 - (bitPos & 7);
+
+          out[byteIndex] |= bit << innerBit;
+          bitPos++;
+        }
+      }
+
+      return out;
+    }
+
+    function unpackCoordinates(packedBytes, bitsPerCoordinate, count) {
+      const coordinates = new Uint32Array(count);
+      let bitPos = 0;
+
+      for (let i = 0; i < count; i++) {
+        let value = 0;
+
+        for (let b = 0; b < bitsPerCoordinate; b++) {
+          const byteIndex = bitPos >> 3;
+          const innerBit = 7 - (bitPos & 7);
+
+          if (byteIndex >= packedBytes.length) {
+            throw new Error("Packed coordinate stream ended unexpectedly.");
+          }
+
+          const bit = (packedBytes[byteIndex] >> innerBit) & 1;
+          value = (value << 1) | bit;
+
+          bitPos++;
+        }
+
+        coordinates[i] = value >>> 0;
+      }
+
+      return coordinates;
+    }
+
+    async function sha256Bytes(bytes) {
+      const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
+      return new Uint8Array(hashBuffer);
+    }
+
+    function equalBytes(a, b) {
+      if (!a || !b) return false;
+      if (a.length !== b.length) return false;
+
+      let diff = 0;
+
+      for (let i = 0; i < a.length; i++) {
+        diff |= a[i] ^ b[i];
+      }
+
+      return diff === 0;
+    }
+
+    function bytesToHex(bytes) {
+      return Array.from(bytes)
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function concatUint8Arrays(arrays) {
+      let totalLength = 0;
+
+      for (const arr of arrays) {
+        totalLength += arr.length;
+      }
+
+      const out = new Uint8Array(totalLength);
+      let offset = 0;
+
+      for (const arr of arrays) {
+        out.set(arr, offset);
+        offset += arr.length;
+      }
+
+      return out;
+    }
+
+    function downloadBytes(bytes, filename, mime) {
+      const blob = new Blob([bytes], {
+        type: mime || "application/octet-stream"
+      });
+
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || "download.bin";
+
+      document.body.appendChild(a);
+      a.click();
+
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        a.remove();
+      }, 100);
+    }
+
+    function stripExtension(name) {
+      if (!name) return "";
+      return name.replace(/\.[^/.]+$/, "");
+    }
+
+    function hasExtension(name) {
+      return /\.[A-Za-z0-9]{1,12}$/.test(name || "");
+    }
+
+    function setStatus(id, text, kind) {
+      const el = document.getElementById(id);
+
+      if (!el) return;
+
+      el.textContent = text;
+      el.className = "status";
+
+      if (kind) {
+        el.classList.add(kind);
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function detectFileType(bytes) {
+      const b = bytes;
+
+      const ascii = (start, len) => {
+        let s = "";
+        for (let i = start; i < start + len && i < b.length; i++) {
+          s += String.fromCharCode(b[i]);
+        }
+        return s;
+      };
+
+      const starts = (...values) => {
+        if (b.length < values.length) return false;
+
+        for (let i = 0; i < values.length; i++) {
+          if (b[i] !== values[i]) return false;
+        }
+
+        return true;
+      };
+
+      // PNG
+      if (starts(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) {
+        return {
+          extension: ".png",
+          mime: "image/png",
+          label: "PNG image"
+        };
+      }
+
+      // JPEG
+      if (starts(0xff, 0xd8, 0xff)) {
+        return {
+          extension: ".jpg",
+          mime: "image/jpeg",
+          label: "JPEG image"
+        };
+      }
+
+      // GIF
+      if (ascii(0, 6) === "GIF87a" || ascii(0, 6) === "GIF89a") {
+        return {
+          extension: ".gif",
+          mime: "image/gif",
+          label: "GIF image"
+        };
+      }
+
+      // BMP
+      if (ascii(0, 2) === "BM") {
+        return {
+          extension: ".bmp",
+          mime: "image/bmp",
+          label: "BMP image"
+        };
+      }
+
+      // WebP: RIFF....WEBP
+      if (
+        b.length >= 12 &&
+        ascii(0, 4) === "RIFF" &&
+        ascii(8, 4) === "WEBP"
+      ) {
+        return {
+          extension: ".webp",
+          mime: "image/webp",
+          label: "WebP image"
+        };
+      }
+
+      // AVIF / HEIC / MP4 family:
+      // ISO base media file format often has:
+      // bytes 4-7 = "ftyp"
+      // bytes 8-11 = major brand
+      if (b.length >= 12 && ascii(4, 4) === "ftyp") {
+        const brand = ascii(8, 4);
+
+        if (brand === "avif" || brand === "avis") {
+          return {
+            extension: ".avif",
+            mime: "image/avif",
+            label: "AVIF image"
+          };
+        }
+
+        if (
+          brand === "heic" ||
+          brand === "heix" ||
+          brand === "hevc" ||
+          brand === "hevx" ||
+          brand === "mif1" ||
+          brand === "msf1"
+        ) {
+          return {
+            extension: ".heic",
+            mime: "image/heic",
+            label: "HEIC/HEIF image"
+          };
+        }
+        if (
+          brand === "isom" ||
+          brand === "iso2" ||
+          brand === "mp41" ||
+          brand === "mp42" ||
+          brand === "M4V " ||
+          brand === "M4A "
+        ) {
+          return {
+            extension: ".mp4",
+            mime: "video/mp4",
+            label: "MP4 / ISO-BMFF media"
+          };
+        }
+      }
+
+      // ICO
+      if (starts(0x00, 0x00, 0x01, 0x00)) {
+        return {
+          extension: ".ico",
+          mime: "image/x-icon",
+          label: "ICO icon"
+        };
+      }
+
+      // PDF
+      if (starts(0x25, 0x50, 0x44, 0x46, 0x2d)) {
+        return {
+          extension: ".pdf",
+          mime: "application/pdf",
+          label: "PDF document"
+        };
+      }
+
+      // ZIP / Office Open XML / ODT containers
+      if (starts(0x50, 0x4b, 0x03, 0x04)) {
+        return {
+          extension: ".zip",
+          mime: "application/zip",
+          label: "ZIP archive or document container"
+        };
+      }
+
+      // RAR
+      if (starts(0x52, 0x61, 0x72, 0x21, 0x1a, 0x07)) {
+        return {
+          extension: ".rar",
+          mime: "application/vnd.rar",
+          label: "RAR archive"
+        };
+      }
+
+      // 7z
+      if (starts(0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c)) {
+        return {
+          extension: ".7z",
+          mime: "application/x-7z-compressed",
+          label: "7-Zip archive"
+        };
+      }
+
+      // GZip
+      if (starts(0x1f, 0x8b)) {
+        return {
+          extension: ".gz",
+          mime: "application/gzip",
+          label: "GZip archive"
+        };
+      }
+
+      // MP3
+      if (ascii(0, 3) === "ID3" || starts(0xff, 0xfb) || starts(0xff, 0xf3)) {
+        return {
+          extension: ".mp3",
+          mime: "audio/mpeg",
+          label: "MP3 audio"
+        };
+      }
+
+      // OGG
+      if (ascii(0, 4) === "OggS") {
+        return {
+          extension: ".ogg",
+          mime: "application/ogg",
+          label: "Ogg media"
+        };
+      }
+
+      // FLAC
+      if (ascii(0, 4) === "fLaC") {
+        return {
+          extension: ".flac",
+          mime: "audio/flac",
+          label: "FLAC audio"
+        };
+      }
+
+      // WAV: RIFF....WAVE
+      if (
+        b.length >= 12 &&
+        ascii(0, 4) === "RIFF" &&
+        ascii(8, 4) === "WAVE"
+      ) {
+        return {
+          extension: ".wav",
+          mime: "audio/wav",
+          label: "WAV audio"
+        };
+      }
+
+      // MIDI
+      if (ascii(0, 4) === "MThd") {
+        return {
+          extension: ".mid",
+          mime: "audio/midi",
+          label: "MIDI file"
+        };
+      }
+
+      // WebM / Matroska: EBML header
+      if (starts(0x1a, 0x45, 0xdf, 0xa3)) {
+        return {
+          extension: ".webm",
+          mime: "video/webm",
+          label: "WebM / Matroska media"
+        };
+      }
+
+      // EXE / DLL
+      if (ascii(0, 2) === "MZ") {
+        return {
+          extension: ".exe",
+          mime: "application/vnd.microsoft.portable-executable",
+          label: "Windows PE executable"
+        };
+      }
+
+      // WebAssembly
+      if (starts(0x00, 0x61, 0x73, 0x6d)) {
+        return {
+          extension: ".wasm",
+          mime: "application/wasm",
+          label: "WebAssembly binary"
+        };
+      }
+
+      // JSON text
+      if (looksLikeUtf8Text(b)) {
+        const text = safeDecodeUtf8(b).trim();
+
+        if (
+          (text.startsWith("{") && text.endsWith("}")) ||
+          (text.startsWith("[") && text.endsWith("]"))
+        ) {
+          return {
+            extension: ".json",
+            mime: "application/json",
+            label: "JSON text"
+          };
+        }
+
+        // HTML
+        const lower = text.slice(0, 256).toLowerCase();
+
+        if (
+          lower.includes("<!doctype html") ||
+          lower.includes("<html") ||
+          lower.includes("<head") ||
+          lower.includes("<body")
+        ) {
+          return {
+            extension: ".html",
+            mime: "text/html",
+            label: "HTML document"
+          };
+        }
+
+        return {
+          extension: ".txt",
+          mime: "text/plain",
+          label: "Plain text"
+        };
+      }
+
+      return {
+        extension: ".bin",
+        mime: "application/octet-stream",
+        label: "Unknown binary"
+      };
+    }
+
+    function looksLikeUtf8Text(bytes) {
+      if (bytes.length === 0) return true;
+
+      const sampleLength = Math.min(bytes.length, 4096);
+      let plausible = 0;
+
+      for (let i = 0; i < sampleLength; i++) {
+        const c = bytes[i];
+
+        if (
+          c === 9 ||
+          c === 10 ||
+          c === 13 ||
+          (c >= 32 && c <= 126) ||
+          c >= 128
+        ) {
+          plausible++;
+        }
+      }
+
+      return plausible / sampleLength > 0.92;
+    }
+
+    function safeDecodeUtf8(bytes) {
+      try {
+        return decoder.decode(bytes);
+      } catch (err) {
+        return "";
+      }
+    }
+  </script>
+</body>
+</html>
